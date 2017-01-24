@@ -9,3 +9,6 @@ dist
 docs/_build
 profiled_tests.txt
 dump.rdb
+*~
+.python-version
+.idea

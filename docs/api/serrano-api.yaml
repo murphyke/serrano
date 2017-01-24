@@ -1,0 +1,454 @@
+# Experiment in documenting the Serrano API using swagger.io
+swagger: '2.0'
+info:
+  title: Serrano Hypermedia API
+  description: Harvest REST API used by e.g. Cilantro and built on top of e.g. Avocado
+  version: "2.4.5"
+# There is no public service, but if there were, it would be defined with `host`.
+# Demo host:
+# host: harvest.research.chop.edu
+# array of all schemes that your API supports
+schemes:
+  - http
+  - https
+# For demo purposes, `basePath` will be prefixed to all paths
+# TODO: versioning the API and requiring/expecting a version path prefix might be a good idea
+# basePath: /demo/api
+produces:
+  - application/json
+paths:
+  /:
+    get:
+      summary: Service information
+      description: |
+        The root endpoint returns the name and version of the API.
+        **TODO**: Swagger has a conventional Info object also including description,
+        terms of service, etc, which is a superset of the current payload object.          
+      tags:
+        - General
+      responses:
+        '200':
+          description: Name and version of the API
+          schema:
+            $ref: '#/definitions/ServiceInfo'
+    post:
+      summary: Authentication
+      description: |
+        Posting to the root endpoint produces an authentication token
+        in the response. By default, Serrano does not require authentication
+        (SERRANO_AUTH_REQUIRED is False), and in many current installations,
+        the Serrano API is protected by the encompassing application.
+      parameters:
+        - name: auth
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AuthParams'
+      tags:
+        - Auth
+      responses:
+        200:
+          description: Auth success response with token
+          schema:
+            $ref: '#/definitions/ServiceInfoWithToken'
+        default:
+          description: Auth failure response
+          schema:
+            $ref: '#/definitions/AuthError'
+  /categories:
+    get:
+      summary: Get all published categories
+      description: |
+        Get a list of categories, including hierarchical relationships between them.
+        **Note** that the category information does *not* include the description
+        of the category. Archived categories are not returned because published state
+        is mutually exclusive with archived state.
+      tags:
+        - Model
+      responses:
+        200:
+          description: A list of categories
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Category'
+  /categories/{id}:
+    get:
+      summary: Get one category
+      description: |
+        Fetch the definition of a published category by id.
+      parameters:
+        - name: id
+          in: path
+          description: Primary key of category
+          required: true
+          type: integer
+      tags:
+        - Model
+      responses:
+        200:
+          description: A category
+          schema:
+            $ref: '#/definitions/Category'
+        default:
+          description: 404 error with no body
+  /concepts:
+    get:
+      summary: Get all published concepts
+      description: |
+        Get a list of concepts, including hierarchical relationships between them.
+        **Note** that the concept information does *not* include the description
+        of the concept. Archived concepts are not returned because published state
+        is mutually exclusive with archived state.
+      tags:
+        - Model
+      responses:
+        200:
+          description: A list of concepts
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Concept'
+  /concepts/{id}:
+    get:
+      summary: Get one concept
+      description: |
+        Fetch the definition of a published concept by id.
+      parameters:
+        - name: id
+          in: path
+          description: Primary key of concept
+          required: true
+          type: integer
+      tags:
+        - Model
+      responses:
+        200:
+          description: A concept
+          schema:
+            $ref: '#/definitions/Concept'
+        default:
+          description: 404 error with no body
+  /fields:
+    get:
+      summary: Get all published fields
+      description: |
+        Get a list of fields, including hierarchical relationships between them.
+        **Note** that the field information does *not* include the description
+        of the field. Archived fields are not returned because published state
+        is mutually exclusive with archived state.
+      tags:
+        - Model
+      responses:
+        200:
+          description: A list of fields
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Field'
+  /fields/{id}:
+    get:
+      summary: Get one field
+      description: |
+        Fetch the definition of a published field by id.
+      parameters:
+        - name: id
+          in: path
+          description: Primary key of field
+          required: true
+          type: integer
+      tags:
+        - Model
+      responses:
+        200:
+          description: A field
+          schema:
+            $ref: '#/definitions/Field'
+        default:
+          description: 404 error with no body
+definitions:
+  ServiceInfo:
+    type: object
+    properties:
+      title:
+        type: string
+      version:
+        type: string
+      _links:
+        $ref: '#/definitions/AllLinks'
+  ServiceInfoWithToken:
+    type: object
+    properties:
+      title:
+        type: string
+      version:
+        type: string
+      token:
+        type: string
+      _links:
+        $ref: '#/definitions/AllLinks'
+  AuthParams:
+    type: object
+    properties:
+      username:
+        type: string
+        description: Username
+      password:
+        type: string
+        description: Unencrypted password
+  AuthError:
+    type: object
+    properties:
+      message:
+        type: string
+        description: Error message is 'Invalid credentials'
+  Category:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: Primary key of category object
+      name:
+        type: string
+        description: Name of category
+      order:
+        type: number
+        format: float
+        description: Order of category for display
+      parent_id:
+        type: integer
+        description: id of the parent category, or `null` for top-level categories
+      _links:
+        $ref: '#/definitions/CategoryLinks'
+  CategoryLinks:
+    type: object
+    description: Related links for a category
+    properties:
+      parent:
+        type: string
+        format: url
+        description: |
+          URL of the parent category, if any. Note that if there is no
+          parent category, then the `parent` attribute will not exist.
+          **TODO**: not sure how to represent this in Swagger.
+      self:
+        type: string
+        format: url
+        description: |
+          URL of *this* category.
+  Concept:
+    type: object
+    properties:
+      category:
+        $ref: '#/definitions/Category'
+      description:
+        type: string
+      fields:
+        type: array
+        items:
+          $ref: '#/definitions/FieldSummary'
+      formatter:
+        type: string
+        description: Name of formatter to be applied to the concept
+      id:
+        type: integer
+        description: Primary key of concept
+      keywords:
+        type: string
+        description: |
+          Keywords/tags defined for this concept.
+          **TODO**: what is the format of this property?
+      modified:
+        type: string
+        description: Date of last modification of concept
+        format: date-time
+      name:
+        type: string
+        description: Name of concept
+      order:
+        type: number
+        format: float
+        description: Order of concept within its category, or null
+      plural_name:
+        type: string
+        description: Plural name of concept
+      published:
+        type: boolean
+        description: Whether published or not (always true)
+      queryable:
+        type: boolean
+        description: Whether concept should be queryable
+      sortable:
+        type: boolean
+        description: Whether concept should be sortable (if it is viewable)
+      viewable:
+        type: boolean
+        description: Whether concept should be viewable in a result set
+  FieldSummary:
+    type: object
+    properties:
+      alt_name:
+        type: string
+        description: Same as the name, but **TODO** - what is it supposed to be?
+      alt_plural_name:
+        type: string
+        description: Plural name of the field if not canonical (??? **TODO**)
+      description:
+        type: string
+        description: Description of the field
+      name:
+        type: string
+        description: Name of the field
+      pk:
+        type: integer
+        description: Primary key of the field
+  Field:
+    type: object
+    properties:
+      app_name:
+        type: string
+        description: Django app containing the field's model.
+      data_modified:
+        type: string
+        description: |
+          **TODO** What is this? Obsolete?
+      description:
+        type: string
+        description: Description of field
+      enumerable:
+        type: boolean
+        description: Whether field is discrete with low cardinality
+      field_name:
+        type: string
+        description: Name of corresponding column in database
+      id:
+        type: integer
+        description: Primary key of field
+      internal_type:
+        type: string
+        description: Type of corresponding column in database
+      keywords:
+        type: string
+        description: |
+          **TODO** format? (may be null)
+      model_name:
+        type: string
+        description: Name of Django model containing the field
+      modified:
+        type: string
+        format: date-time
+        description: Timestamp of last modification of field definition
+      name:
+        type: string
+        description: Name of field
+      nullable:
+        type: boolean
+        description: Whether field values can be NULL
+      operators:
+        $ref: '#/definitions/OperatorList'
+      order:
+        type: number
+        format: float
+        description: Order of field within its concept
+      plural_name:
+        type: string
+        description: Plural name of field
+      plural_unit:
+        type: string
+        description: Plural form of the unit in which field values are expressed
+      published:
+        type: boolean
+        description: Always true, because only published fields are exposed (**TODO**)
+      searchable:
+        type: boolean
+        description: Whether field is a non-enumerable text field (see enumberable)
+      simple_type:
+        type: string
+        description: Simplified type of field (string, number, boolean, or key)
+      unit:
+        type: string
+        description: Unit in which field values are expressed, if any
+      _links:
+        $ref: '#/definitions/FieldLinks'
+  FieldLinks:
+    type: object
+    properties:
+      distribution:
+        type: string
+        format: url
+        description: Distribution (/dist) endpoint for this field
+      self:
+        type: string
+        format: url
+        description: Endpoint for this field
+      stats:
+        type: string
+        format: url
+        description: Statistics (/stats) endpoint for this field
+      values:
+        type: string
+        format: url
+        description: Values (/values) endpoint for this field
+  OperatorList:
+    description: List of applicable operators, each a list of (summary, description)
+    type: array
+    items:
+      type: array
+      items:
+        type: string
+  AllLinks:
+    type: object
+    description: All top-level endpoints for the service except `async`
+    properties:
+      categories:
+        type: string
+        format: url
+        description: categories endpoint
+      concepts:
+        type: string
+        format: url
+        description: concepts endpoint
+      contexts:
+        type: string
+        format: url
+        description: contexts endpoint
+      exporter:
+        type: string
+        format: url
+        description: exporter endpoint
+      fields:
+        type: string
+        format: url
+        description: fields endpoint
+      ping:
+        type: string
+        format: url
+        description: ping endpoint
+      preview:
+        type: string
+        format: url
+        description: preview endpoint
+      public_queries:
+        type: string
+        format: url
+        description: public queries (/public) endpoint
+      queries:
+        type: string
+        format: url
+        description: queries endpoint
+      self:
+        type: string
+        format: url
+        description: root endpoint
+      sets:
+        type: string
+        format: url
+        description: sets endpoint
+      stats:
+        type: string
+        format: url
+        description: stats endpoint
+      views:
+        type: string
+        format: url
+        description: views endpoint
