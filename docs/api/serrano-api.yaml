@@ -166,6 +166,36 @@ paths:
             $ref: '#/definitions/Field'
         default:
           description: 404 error with no body
+  /data/preview:
+    get:
+      summary: Fetch results of current query
+      description: |
+        Fetch results of the current query.
+      parameters:
+        - name: page
+          in: query
+          description: Which page of results to fetch (1 = first)
+          required: false
+          type: integer
+        - name: limit
+          in: query
+          description: Page size in rows. If 0, all rows are returned.
+          required: false
+          type: integer
+        - name: stop_page
+          in: query
+          description: |
+            **TODO** Should not be allowed for the preview endpoint. There
+            are other parameters that should probably also be forbidden.
+      tags:
+        - Query
+      responses:
+        200:
+          description: List of results
+          schema:
+            $ref: '#/definitions/Results'
+        default:
+          description: 404 error for invalid parameters
 definitions:
   ServiceInfo:
     type: object
@@ -452,3 +482,34 @@ definitions:
         type: string
         format: url
         description: views endpoint
+  Results:
+    type: object
+    description: Requested results rows
+    properties:
+      item_name:
+        type: string
+        description: Name of root concept (e.g. patient)
+      item_name_plural:
+        type: string
+        description: Plural name of root concept
+      items:
+        type: array
+        description: Array of arrays containing row data 
+        items:
+          type: array
+      keys:
+        type: array
+        description: Array of objects describing column (concept) names
+        items:
+          type: object
+          description: |
+            Column (concept) name object. **TODO** Can this be anything
+            other than a concept? A formatter can inject other columns?
+          properties:
+            id:
+              type: integer
+              description: Primary key of concept
+            name:
+              type: string
+              description: Name of column concept
+              
