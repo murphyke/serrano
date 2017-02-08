@@ -31,6 +31,22 @@ paths:
           description: Name and version of the API
           schema:
             $ref: '#/definitions/ServiceInfo'
+          headers:
+            # TODO: is there a way of isolating this definition
+            Link:
+              type: string
+              format: '<URL>; rel="PURPOSE"[, ...]'
+              description: |
+                All un-templated endpoints
+                Example: <http://127.0.0.1:8000/api/data/export/>; rel="exporter", ...
+                TODO: document the rels.
+            Link-Template:
+              type: string
+              format: '<URL>; rel="PURPOSE"[, ...]'
+              description: |
+                All templated endpoints
+                Example: <http://127.0.0.1:8000/api/data/export/{type}/>; rel="export", ...
+                TODO: document the rels.
     post:
       summary: Authentication
       description: |
@@ -51,11 +67,24 @@ paths:
           description: Auth success response with token
           schema:
             $ref: '#/definitions/ServiceInfoWithToken'
+          headers:
+            Link:
+              type: string
+              format: '<URL>; rel="PURPOSE"[, ...]'
+              description: |
+                All un-templated endpoints
+                Example: <http://127.0.0.1:8000/api/data/export/>; rel="exporter", ...
+            Link-Template:
+              type: string
+              format: '<URL>; rel="PURPOSE"[, ...]'
+              description: |
+                All templated endpoints
+                Example: <http://127.0.0.1:8000/api/data/export/{type}/>; rel="export", ...
         default:
           description: Auth failure response
           schema:
             $ref: '#/definitions/AuthError'
-  /categories:
+  /categories/:
     get:
       summary: Get all published categories
       description: |
@@ -72,7 +101,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Category'
-  /categories/{id}:
+  /categories/{id}/:
     get:
       summary: Get one category
       description: |
@@ -92,7 +121,7 @@ paths:
             $ref: '#/definitions/Category'
         default:
           description: 404 error with no body
-  /concepts:
+  /concepts/:
     get:
       summary: Get all published concepts
       description: |
@@ -109,7 +138,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Concept'
-  /concepts/{id}:
+  /concepts/{id}/:
     get:
       summary: Get one concept
       description: |
@@ -129,14 +158,11 @@ paths:
             $ref: '#/definitions/Concept'
         default:
           description: 404 error with no body
-  /fields:
+  /fields/:
     get:
       summary: Get all published fields
       description: |
-        Get a list of fields, including hierarchical relationships between them.
-        **Note** that the field information does *not* include the description
-        of the field. Archived fields are not returned because published state
-        is mutually exclusive with archived state.
+        Get a list of published, non-archived fields.
       tags:
         - Model
       responses:
@@ -146,7 +172,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Field'
-  /fields/{id}:
+  /fields/{id}/:
     get:
       summary: Get one field
       description: |
@@ -166,11 +192,32 @@ paths:
             $ref: '#/definitions/Field'
         default:
           description: 404 error with no body
-  /data/preview:
+  /data/preview/:
     get:
-      summary: Fetch results of current query
+      summary: Fetch results of a query
       description: |
-        Fetch results of the current query.
+        Fetch results of a specified or default query, limited to a single page of results.
+        
+        The page size (`limit`) can be 0, in which case all results are returned.
+        
+        1. If there are `view` and `context` parameters, use those to define the query.
+        These parameters can be primary keys or actual JSON objects.
+        2. Otherwise, if there is a JSON object `query` parameter, use that to define the query
+        by extracting the `context` and `view` from the query (the latter may be primary keys or
+        JSON objects).
+        3. Otherwise, if there is a non-object `query` parameter, it is taken as the primary key
+        of a query object, and if there is an authenticated user, use the query object belonging to the user
+        and matching the primary key. Otherwise, if there is not an authenticated user, use the query
+        object matching the session key and the primary key. In both of these cases, if the `query`
+        parameter is not an integer (and not a JSON object), the primary key condition is swapped
+        for one of `session = True`.
+        4. Otherwise, construct a default query object, which will return a result
+        set consisting of nothing except the primary key of each row in the default root model, e.g. the
+        primary key of each patient.
+
+        Note: OpenAPI 2.0 (current version) is not capable of representing this API because it can't
+        handle polymorphic entities in general, in particular, the `query`, `view` and `context` parameters
+        may be either integers or JSON objects.
       parameters:
         - name: page
           in: query
@@ -185,8 +232,10 @@ paths:
         - name: stop_page
           in: query
           description: |
-            **TODO** Should not be allowed for the preview endpoint. There
-            are other parameters that should probably also be forbidden.
+            **TODO** Should not be allowed for the preview endpoint. Are
+            there other parameters that should be forbidden?
+          required: false
+          type: integer
       tags:
         - Query
       responses:
@@ -204,8 +253,6 @@ definitions:
         type: string
       version:
         type: string
-      _links:
-        $ref: '#/definitions/AllLinks'
   ServiceInfoWithToken:
     type: object
     properties:
@@ -215,8 +262,6 @@ definitions:
         type: string
       token:
         type: string
-      _links:
-        $ref: '#/definitions/AllLinks'
   AuthParams:
     type: object
     properties:
@@ -426,62 +471,6 @@ definitions:
       type: array
       items:
         type: string
-  AllLinks:
-    type: object
-    description: All top-level endpoints for the service except `async`
-    properties:
-      categories:
-        type: string
-        format: url
-        description: categories endpoint
-      concepts:
-        type: string
-        format: url
-        description: concepts endpoint
-      contexts:
-        type: string
-        format: url
-        description: contexts endpoint
-      exporter:
-        type: string
-        format: url
-        description: exporter endpoint
-      fields:
-        type: string
-        format: url
-        description: fields endpoint
-      ping:
-        type: string
-        format: url
-        description: ping endpoint
-      preview:
-        type: string
-        format: url
-        description: preview endpoint
-      public_queries:
-        type: string
-        format: url
-        description: public queries (/public) endpoint
-      queries:
-        type: string
-        format: url
-        description: queries endpoint
-      self:
-        type: string
-        format: url
-        description: root endpoint
-      sets:
-        type: string
-        format: url
-        description: sets endpoint
-      stats:
-        type: string
-        format: url
-        description: stats endpoint
-      views:
-        type: string
-        format: url
-        description: views endpoint
   Results:
     type: object
     description: Requested results rows
@@ -494,9 +483,13 @@ definitions:
         description: Plural name of root concept
       items:
         type: array
-        description: Array of arrays containing row data 
+        description: Array of result rows
         items:
           type: array
+          description: Data for one row
+          items:
+            description: Value for a column (should be string or number; shown as string)
+            type: string
       keys:
         type: array
         description: Array of objects describing column (concept) names
@@ -512,4 +505,51 @@ definitions:
             name:
               type: string
               description: Name of column concept
-              
+      limit:
+        type: integer
+        description: Value of the `limit` parameter used in the request
+      page:
+        type: integer
+        description: Value of the `page` parameter used in the request
+  Context:
+    type: object
+    description: |
+      DataContext definition or primary key.
+      This is a tree object.
+      The top-level properties are (operator) `type` and `children`, but `children` may
+      contain other nodes ....
+      TODO: define this in JSON Schema when OpenAPI 3.0 comes out (represent
+      polymorphism and gnarly query logic tree).
+    properties:
+      type:
+        type: string
+        description: Operator to be applied at this node of the tree, e.g. 'and'
+      children:
+        type: string
+        description: |
+          TODO: This is NOT a string, but a gnarly object.
+  View:
+    type: object
+    description: |
+      DataView definition or primary key.
+      TODO: define this properly in JSON Schema when OpenAPI 3.0 comes out
+    properties:
+      ordering:
+        description: |
+          Order of columns.
+          This is supposed to be an array of arrays of (integer, string), where the integer is
+          the primary key of a concept, and the string indicates the sort order ("asc" or "desc").
+          Because OpenAPI 2.0 doesn't support heterogeneous arrays, 
+        type: array
+        items:
+          type: array
+          items:
+            type: string
+  Query:
+    type: object
+    description: |
+      Stub DataQuery definition. TODO: make this real
+    properties:
+      something:
+        type: string
+        

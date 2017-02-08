@@ -1,0 +1,88 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+    "definitions": {
+	"context_leaf": {
+	    "type": "object",
+	    "description": "Leaf node in a context tree",
+	    "properties": {
+		"concept": {
+		    "type": "integer",
+		    "description": "Primary key of an Avocado DataConcept object"
+		},
+		"language": {
+		    "type": "string",
+		    "description": "Human-readable description of this query condition"
+		},
+		"cleaned_value": {
+		    "type": "array",
+		    "description": "Array of concept field value and label for each operand of the operator",
+		    "items": {
+			"type": "object",
+			"properties": {
+			    "value": {
+				"oneOf": [
+				    {"type": "string"},
+				    {"type": "number"}
+				]
+			    },
+			    "label": {
+				"oneOf": [
+				    {"type": "string"},
+				    {"type": "number"}
+				]
+			    }
+			}
+		    }
+		},
+		"value": {
+		    "description": "Array of concept field value operands of the operator",
+		    "type": "array",
+		    "items": {
+			"oneOf": [
+			    {"type": "string"},
+			    {"type": "number"}
+			]
+		    }
+		},
+		"field": {
+		    "type": "integer",
+		    "description": "Primary key of the DataField involved in this operation"
+		},
+		"operator": {
+		    "type": "string",
+		    "description": "Operator involved in this condition"
+		}
+	    },
+	    "required": ["concept", "language", "value", "field", "operator"],
+	    "additionalProperties": false
+	}
+    },
+    "id": "#context",
+    "oneOf": [
+	{
+	    "type": "integer",
+	    "description": "Primary key of Avocado DataContext object"
+	},
+	{
+	    "description": "Avocado DataContext (query conditions definition)",
+	    "type": "object",
+	    "properties": {
+		"type":  {
+		    "enum": ["and", "or"]
+		},
+		"children": {
+		    "type": "array",
+		    "items": {
+			"oneOf": [
+			    {"$ref": "#context"},
+			    {"$ref": "#/definitions/context_leaf"}
+			]
+		    }
+		}
+	    },
+	    "required": ["type", "children"],
+	    "additionalProperties": false
+	}
+    ]
+}

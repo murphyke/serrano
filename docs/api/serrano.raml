@@ -1,0 +1,622 @@
+#%RAML 1.0
+title: Serrano Hypermedia API
+version: 2.4.5
+# TODO: most instances of `required: false` are not necessarily true.
+# TODO: the following is for development purposes; there is no public endpoint.
+baseUri: http://harvest.research.chop.edu/demo/api
+baseUriParameters: {}
+documentation:
+- title: Serrano Hypermedia API
+  content: Harvest REST API used by e.g. Cilantro and built on top of e.g. Avocado
+types:
+  ServiceInfo:
+    type: object
+    properties:
+      title:
+        required: false
+        type: string
+      version:
+        required: false
+        type: string
+  ServiceInfoWithToken:
+    type: object
+    properties:
+      title:
+        required: false
+        type: string
+      version:
+        required: false
+        type: string
+      token:
+        required: false
+        type: string
+  AuthParams:
+    type: object
+    properties:
+      username:
+        required: false
+        description: Username
+        type: string
+      password:
+        required: false
+        description: Unencrypted password
+        type: string
+  AuthError:
+    type: object
+    properties:
+      message:
+        description: Authorization error message
+        required: true
+        type: string
+        pattern: "^Invalid credentials$"
+  Category:
+    type: object
+    properties:
+      id:
+        required: false
+        description: Primary key of category object
+        type: integer
+      name:
+        required: false
+        description: Name of category
+        type: string
+      order:
+        required: false
+        description: Order of category for display
+        type: number
+        format: double
+      parent_id:
+        required: false
+        description: id of the parent category, or `null` for top-level categories
+        type:
+          - integer
+          - nil
+  CategoryInconsistent:
+    displayName: Category (inconsistent with canonical Category object)
+    type: object
+    properties:
+      id:
+        required: false
+        description: Primary key of category object
+        type: integer
+      name:
+        required: false
+        description: Name of category
+        type: string
+      order:
+        required: false
+        description: Order of category for display
+        type: number
+        format: double
+      parent:
+        required: false
+        description: id of the parent category, or `null` for top-level categories
+        type:
+          - integer
+          - nil
+  CategoryLinks:
+    description: Related links for a category
+    type: object
+    properties:
+      parent:
+        required: false
+        description: |
+          URL of the parent category, if any. Note that if there is no
+          parent category, then the `parent` attribute will not exist.
+
+          **TODO**: not sure how to represent this in Swagger.
+        type: string
+      self:
+        required: false
+        description: URL of *this* category.
+        type: string
+  Concept:
+    type: object
+    properties:
+      category:
+        required: false
+        type: CategoryInconsistent
+      description:
+        required: false
+        type: string
+      fields:
+        required: false
+        type: array
+        items:
+          type: FieldSummary
+      formatter:
+        required: false
+        description: Name of formatter to be applied to the concept
+        type: string
+      id:
+        required: false
+        description: Primary key of concept
+        type: integer
+      keywords:
+        required: false
+        description: Keywords/tags defined for this concept.
+        type: string
+      modified:
+        required: false
+        description: Date of last modification of concept
+        type: datetime-only
+      name:
+        required: false
+        description: Name of concept
+        type: string
+      order:
+        required: false
+        description: Order of concept within its category, or null
+        type:
+          - number
+          - nil
+        format: double
+      plural_name:
+        required: false
+        description: Plural name of concept
+        type: string
+      published:
+        required: false
+        description: Whether published or not (always true)
+        type: boolean
+      queryable:
+        required: false
+        description: Whether concept should be queryable
+        type: boolean
+      sortable:
+        required: false
+        description: Whether concept should be sortable (if it is viewable)
+        type: boolean
+      viewable:
+        required: false
+        description: Whether concept should be viewable in a result set
+        type: boolean
+    example:
+      category:
+        id: 1
+        name: Patient Details
+        order: 1
+        parent: 
+      description: ''
+      fields:
+      - alt_name: Patient Birthdate
+        alt_plural_name: Patient Birthdates
+        description: Date patient was born as recorded on birth certificate or passport;
+          the month, day and year on which person was born.
+        name: Patient Birthdate
+        pk: 2
+      - alt_name: Patient Birthdate Estimated?
+        alt_plural_name: Patient Birthdate Estimated?s
+        description: Whether birthdate is exact (no) or estimated (yes).
+        name: Patient Birthdate Estimated?
+        pk: 3
+      formatter: Age
+      id: 1
+      keywords: kw1 kw2
+      modified: 2017-02-02T10:18:47
+      name: Age
+      order: 
+      plural_name: Ages
+      published: true
+      queryable: true
+      sortable: true
+      viewable: true      
+  FieldSummary:
+    type: object
+    properties:
+      alt_name:
+        required: false
+        description: Same as the name, but **TODO** - what is it supposed to be?
+        type: string
+      alt_plural_name:
+        required: false
+        description: Plural name of the field if not canonical (??? **TODO**)
+        type: string
+      description:
+        required: false
+        description: Description of the field
+        type: string
+      name:
+        required: false
+        description: Name of the field
+        type: string
+      pk:
+        required: false
+        description: Primary key of the field
+        type: integer
+  Field:
+    type: object
+    properties:
+      app_name:
+        required: false
+        description: Django app containing the field's model.
+        type: string
+      data_modified:
+        required: false
+        description: '**TODO** What is this? Obsolete?'
+        type: nil
+      description:
+        required: false
+        description: Description of field
+        type: string
+      enumerable:
+        required: false
+        description: Whether field is discrete with low cardinality
+        type: boolean
+      field_name:
+        required: false
+        description: Name of corresponding column in database
+        type: string
+      id:
+        required: false
+        description: Primary key of field
+        type: integer
+      internal_type:
+        required: false
+        description: Type of corresponding column in database
+        type: string
+      keywords:
+        required: false
+        description: '**TODO** format? (may be null)'
+        type: string
+      model_name:
+        required: false
+        description: Name of Django model containing the field
+        type: string
+      modified:
+        required: false
+        description: Timestamp of last modification of field definition
+        type: datetime-only
+      name:
+        required: false
+        description: Name of field
+        type: string
+      nullable:
+        required: false
+        description: Whether field values can be NULL
+        type: boolean
+      operators:
+        required: false
+        description: List of applicable operators, each a list of (summary, description)
+        type: array
+        items:
+          type: string
+      order:
+        required: false
+        description: Order of field within its concept
+        type: number
+        format: double
+      plural_name:
+        required: false
+        description: Plural name of field
+        type: string
+      plural_unit:
+        required: false
+        description: Plural form of the unit in which field values are expressed
+        type: string
+      published:
+        required: false
+        description: Always true, because only published fields are exposed (**TODO**)
+        type: boolean
+      searchable:
+        required: false
+        description: Whether field is a non-enumerable text field (see enumberable)
+        type: boolean
+      simple_type:
+        required: false
+        description: Simplified type of field (string, number, boolean, or key)
+        type: string
+      unit:
+        required: false
+        description: Unit in which field values are expressed, if any
+        type: string
+  FieldLinks:
+    type: object
+    properties:
+      distribution:
+        required: false
+        description: Distribution (/dist) endpoint for this field
+        type: string
+      self:
+        required: false
+        description: Endpoint for this field
+        type: string
+      stats:
+        required: false
+        description: Statistics (/stats) endpoint for this field
+        type: string
+      values:
+        required: false
+        description: Values (/values) endpoint for this field
+        type: string
+  Results:
+    description: Requested results rows.
+    type: object
+    properties:
+      item_name:
+        required: true
+        description: Name of root concept (e.g. patient)
+        type: string
+      item_name_plural:
+        required: true
+        description: Plural name of root concept
+        type: string
+      items:
+        required: true
+        description: Array of result rows
+        type: array
+        items:
+          type: ResultRow
+      keys:
+        required: true
+        description: Array of objects describing column (concept) names
+        type: array
+        items:
+          type: ColumnKey
+      limit:
+        required: true
+        description: Value of the `limit` parameter used in the request
+        type: integer | nil
+      page:
+        required: true
+        description: Value of the `page` parameter used in the request
+        type: integer | nil
+  ResultRow:
+    description: A single Row from query results.
+    type: object
+    properties:
+      pk:
+        required: true
+        description: |
+          Primary key of the root model instance associated with the data
+          in this results row. For instance, if the root model is Patient,
+          `pk` is the primary key of the particular patient record
+          to which this row applies.
+        type: integer
+      values:
+        required: true
+        description: Array of values for a row of results.
+        type: string | number | nil
+  ColumnKey:
+    description: |
+      Column (concept) name object. **TODO** Can this be anything
+
+      other than a concept? A formatter can inject other columns?
+    type: object
+    properties:
+      id:
+        required: false
+        description: Primary key of concept
+        type: integer
+      name:
+        required: false
+        description: Name of column concept
+        type: string
+  Context:
+    description: |
+      DataContext definition or primary key.
+
+      If not an integer primary key, this is a tree object.
+
+      The top-level properties are `type` (boolean operator) and `children`,
+      but `children` may contain other nodes ....
+    type: !include serrano.context.schema.json
+  View:
+    description: |
+      DataView definition or primary key.
+
+      If not an integer primary key, this is an object containing
+      columns and ordering.
+    type: !include serrano.view.schema.json
+  Query:
+    description: |
+      Stub DataQuery definition. TODO: make this real.
+    type: object
+    properties:
+      something:
+        required: false
+        type: string
+/:
+  get:
+    description: |
+      The root endpoint returns the name and version of the API.
+    responses:
+      200:
+        description: Name and version of the API
+        body:
+          application/json:
+            description: Name and version of the API
+            type: ServiceInfo
+        headers:
+          Link:
+            type: string
+            pattern: '<.*>; rel="[^"]+"(,<.*>; rel="[^"]+")*'
+            description: |
+              All un-templated endpoints
+            example: <http://127.0.0.1:8000/api/data/export/>; rel="exporter"
+          Link-Template:
+            type: string
+            pattern: '<.*>; rel="[^"]+"(,<.*>; rel="[^"]+")*'
+            description: |
+              All templated endpoints
+            example: <http://127.0.0.1:8000/api/data/export/{type}/>; rel="exporter"
+  post:
+    description: |
+        Posting to the root endpoint produces an authentication token
+        in the response. By default, Serrano does not require authentication
+        (SERRANO_AUTH_REQUIRED is False), and in many current installations,
+        the Serrano API is protected by the encompassing application.
+    body:
+      application/json:
+        type: AuthParams
+    responses:
+      200:
+        description: Auth success response with token
+        body:
+          application/json:
+            description: Auth success response with token
+            type: ServiceInfoWithToken
+        headers:
+          Link:
+            type: string
+            pattern: '<.*>; rel="[^"]+"(,<.*>; rel="[^"]+")*'
+            description: |
+              All un-templated endpoints
+            example: <http://127.0.0.1:8000/api/data/export/>; rel="exporter"
+          Link-Template:
+            type: string
+            pattern: '<.*>; rel="[^"]+"(,<.*>; rel="[^"]+")*'
+            description: |
+              All templated endpoints
+            example: <http://127.0.0.1:8000/api/data/export/{type}/>; rel="exporter"
+      404:
+        description: Auth failure response
+        body:
+          application/json:
+            type: AuthError
+/categories:
+  /{id}/:
+    uriParameters:
+      id:
+        required: true
+        description: Primary key of category
+        type: integer
+    get:
+      description: Get one category
+      responses:
+        200:
+          description: A DataCategory object.
+          body:
+            application/json:
+              description: A category
+              type: Category
+        404:
+          description: Specified category does not exist
+  /:
+    get:
+      description: Get all published, unarchived categories
+      responses:
+        200:
+          description: A list of categories.
+          body:
+            application/json:
+              description: A list of DataCategory objects.
+              type: array
+              items:
+                type: Category
+/concepts:
+  /{id}/:
+    uriParameters:
+      id:
+        required: true
+        description: Primary key of concept
+        type: integer
+    get:
+      description: Fetch the definition of a published concept by id.
+      responses:
+        200:
+          description: A concept
+          body:
+            application/json:
+              type: Concept
+        404:
+          description: Specified concept does not exist
+  /:
+    get:
+      description: |
+        Get a list of all published, non-archived concepts.
+      responses:
+        200:
+          description: A list of concepts
+          body:
+            application/json:
+              type: array
+              items:
+                type: Concept
+/fields:
+  /{id}/:
+    uriParameters:
+      id:
+        required: true
+        description: Primary key of field
+        type: integer
+    get:
+      description: Get one field
+      responses:
+        200:
+          description: Response is a DataField object.
+          body:
+            application/json:
+              description: A field
+              type: Field
+        404:
+          description: Specified field does not exist
+  /:
+    get:
+      description: Get all published fields
+      responses:
+        200:
+          description: Response is a list of DataField objects.
+          body:
+            application/json:
+              description: A list of fields
+              type: array
+              items:
+                type: Field
+/data/preview/:
+  get:
+    description: |
+      Fetch the results of a query. **TODO**: PreviewResource.get
+      implies that it can obtain the view and context from
+      query parameters, but I don't know how to get this to work;
+      I think the code would have to know to `json.loads` the values.
+      Likewise, the `get` handler is happy to try to process the
+      `query` parameter as a fallback, but I'm not sure this works.
+    queryParameters:
+      page:
+        required: false
+        description: Which page of results to fetch (1 = first)
+        type: integer
+      limit:
+        required: false
+        description: Page size in rows. If 0, all rows are returned.
+        type: integer
+      stop_page:
+        required: false
+        description: >
+          **TODO** Should not be allowed for the preview endpoint. (Are
+          there other parameters that should be forbidden?)
+          type: integer
+    responses:
+      200:
+        description: List of query results.
+        body:
+          application/json:
+            description: List of results
+            type: Results
+      404:
+        description: Invalid parameters
+        body:
+          text/html:
+            description: 404 NOT FOUND page
+  post:
+    queryParameters:
+      page:
+        required: false
+        description: Which page of results to fetch (1 = first)
+        type: integer
+      limit:
+        required: false
+        description: Page size in rows. If 0, all rows are returned.
+        type: integer
+      stop_page:
+        required: false
+        description: >
+          **TODO** Should not be allowed for the preview endpoint. (Are
+          there other parameters that should be forbidden?)
+          type: integer
+      context:
+        description: |
+          The context is either an object describing the query conditions
+          or an integer primary key for a saved DataContext object.
+        type: Context

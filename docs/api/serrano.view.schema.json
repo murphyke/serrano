@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "#view",
+    "oneOf": [
+	{
+	    "description": "Primary key of Avocado DataView object",
+	    "type": "integer"
+	},
+	{
+	    "description": "Avocado DataView (list of output concepts/columns)",
+	    "type": "object",
+	    "properties": {
+		"columns": {
+		    "type": "array",
+		    "description": "Primary keys of DataConcept objects to be output",
+		    "items": {
+			"type": "integer"
+		    }
+		},
+		"ordering": {
+		    "type": "array",
+		    "description": "Array containing a single DataConcept primary key to be used as an order key, and the sort direction (asc or desc)",
+		    "items": [
+			{"type": "integer"},
+			{"enum": ["asc", "desc"]}
+		    ],
+		    "oneOf": [
+			{"minItems": 2, "maxItems": 2},
+			{"minItems": 0, "maxItems": 0}
+		    ]
+		}
+	    },
+	    "additionalProperties": false,
+	    "required": ["columns"]
+	}
+    ]
+}
