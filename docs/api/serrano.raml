@@ -8,6 +8,16 @@ baseUriParameters: {}
 documentation:
 - title: Serrano Hypermedia API
   content: Harvest REST API used by e.g. Cilantro and built on top of e.g. Avocado
+traits:
+  linkHeader:
+    usage: Apply to any resource returning a Links header
+    description: Return related links
+    responses:
+      200:
+        headers:
+          Link:
+            type: string
+            pattern: '<[^>]+>; rel="[^"]+"(; description="[^"]+")?(; title="[^"]+")?(,<[^>]+>; rel="[^"]+"(; description="[^"]+")?)*'
 types:
   ServiceInfo:
     type: object
@@ -28,6 +38,16 @@ types:
         required: false
         type: string
       token:
+        required: false
+        type: string
+  ExportServiceInfo:
+    type: object
+    properties:
+      title:
+        required: false
+        type: string
+        pattern: "^Serrano Exporter Endpoints$"
+      version:
         required: false
         type: string
   AuthParams:
@@ -620,3 +640,75 @@ types:
           The context is either an object describing the query conditions
           or an integer primary key for a saved DataContext object.
         type: Context
+/data/export:
+  description: |
+    The export endpoints output the query results in various formats for download.
+    It is possible for an application using Avocado to define custom
+    exporters, in which case additional export endpoints may be available.
+
+    TODO: from looking at the code, it appears that the code will
+    respond to the following query parameters (although presumably not
+    all of them are intended to be overrideable by parameters): page,
+    limit, stop_page, query_name, processor, tree, export_type,
+    reader.  
+
+  /:
+    get:
+      is: [ linkHeader ]
+      description: Return header links for export endpoints
+      responses:
+        200:
+          description: Title and API version of exporter endpoints
+          body:
+            application/json:
+              type: ExportServiceInfo
+          headers:
+            Link:
+              description: |
+                All /data/export/* endpoints, including /excel, /json, /r, /sas, /csv, etc.
+                example: <http://127.0.0.1:8000/api/data/export/excel/>; rel="excel"; description="Microsoft Excel 2007 Format"; title="Excel"
+  /excel/:
+    get:
+      description: Export query results in Excel format
+      responses:
+        200:
+          description: Excel .xlsx file
+          body:
+            application/vnd.ms-excel:
+              type: file
+  /csv/:
+    get:
+      description: Export query results in CSV format
+      responses:
+        200:
+          description: CSV file
+          body:
+            text/csv:
+              type: file
+  /json/:
+    get:
+      description: Export query results in JSON format
+      responses:
+        200:
+          description: JSON file
+          body:
+            application/json:
+              type: file
+  /r/:
+    get:
+      description: Export query results in R format
+      responses:
+        200:
+          description: Zip file containing data.csv and script.R for loading the data
+          body:
+            application/zip:
+              type: file
+  /sas/:
+    get:
+      description: Export query results in CSV format
+      responses:
+        200:
+          description: CSV file
+          body:
+            text/csv:
+              type: file
