@@ -420,22 +420,21 @@ types:
 
       The top-level properties are `type` (boolean operator) and `children`,
       but `children` may contain other nodes ....
-    type: !include serrano.context.schema.json
+    type: !include avocado.objects.schema.json#context
   View:
     description: |
       DataView definition or primary key.
 
       If not an integer primary key, this is an object containing
       columns and ordering.
-    type: !include serrano.view.schema.json
+    type: !include avocado.objects.schema.json#view
   Query:
     description: |
-      Stub DataQuery definition. TODO: make this real.
-    type: object
-    properties:
-      something:
-        required: false
-        type: string
+      DataQuery definition or primary key.
+
+      If not an integer primary key, this is an object containing
+      context and view.
+    type: !include avocado.objects.schema.json#query
 /:
   get:
     description: |
@@ -586,12 +585,15 @@ types:
 /data/preview/:
   get:
     description: |
-      Fetch the results of a query. **TODO**: PreviewResource.get
-      implies that it can obtain the view and context from
-      query parameters, but I don't know how to get this to work;
-      I think the code would have to know to `json.loads` the values.
-      Likewise, the `get` handler is happy to try to process the
-      `query` parameter as a fallback, but I'm not sure this works.
+      Fetch the results of the current query.
+
+      **TODO**: PreviewResource.get implies that it can obtain the
+      view and context from query parameters, but I don't know how to
+      get this to work; I think the code would have to know to
+      `json.loads` the values.  Likewise, the `get` handler is happy
+      to try to process the `query` parameter as a fallback, but I'm
+      not sure this works.
+
     queryParameters:
       page:
         required: false
@@ -637,9 +639,22 @@ types:
           type: integer
       context:
         description: |
-          The context is either an object describing the query conditions
-          or an integer primary key for a saved DataContext object.
+          The context is either an object defining a DataContext
+          (query conditions) or an integer primary key for a saved
+          DataContext object.
         type: Context
+      view:
+        description: |
+          The view is either an object defining a DataView (output
+          columns) or an integer primary key for a saved DataView
+          object.
+        type: View
+      query:
+        description: |
+          The query is either an object defining a DataQuery (query
+          conditions combined with output columns) or an integer
+          primary key for a saved DataQuery object.
+        type: Query
 /data/export:
   description: |
     The export endpoints output the query results in various formats for download.
@@ -650,7 +665,7 @@ types:
     respond to the following query parameters (although presumably not
     all of them are intended to be overrideable by parameters): page,
     limit, stop_page, query_name, processor, tree, export_type,
-    reader.  
+    reader.
 
   /:
     get:

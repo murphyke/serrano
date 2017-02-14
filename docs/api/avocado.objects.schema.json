@@ -1,0 +1,149 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "#root",
+    "schemas": {
+	"context_leaf": {
+	    "id": "#context_leaf",
+	    "type": "object",
+	    "description": "Leaf node in a context tree",
+	    "properties": {
+		"concept": {
+		    "type": "integer",
+		    "description": "Primary key of an Avocado DataConcept object"
+		},
+		"language": {
+		    "type": "string",
+		    "description": "Human-readable description of this query condition"
+		},
+		"cleaned_value": {
+		    "type": "array",
+		    "description": "Array of concept field value and label for each operand of the operator",
+		    "items": {
+			"type": "object",
+			"properties": {
+			    "value": {
+				"oneOf": [
+				    {"type": "string"},
+				    {"type": "number"}
+				]
+			    },
+			    "label": {
+				"oneOf": [
+				    {"type": "string"},
+				    {"type": "number"}
+				]
+			    }
+			}
+		    }
+		},
+		"value": {
+		    "description": "Array of concept field value operands of the operator",
+		    "type": "array",
+		    "items": {
+			"oneOf": [
+			    {"type": "string"},
+			    {"type": "number"}
+			]
+		    }
+		},
+		"field": {
+		    "type": "integer",
+		    "description": "Primary key of the DataField involved in this operation"
+		},
+		"operator": {
+		    "type": "string",
+		    "description": "Operator involved in this condition"
+		}
+	    },
+	    "required": ["concept", "language", "value", "field", "operator"],
+	    "additionalProperties": false
+	},
+	"context": {
+	    "id": "#context",
+	    "oneOf": [
+		{
+		    "type": "integer",
+		    "description": "Primary key of Avocado DataContext object"
+		},
+		{
+		    "description": "Avocado DataContext (query conditions definition)",
+		    "type": "object",
+		    "properties": {
+			"type":  {
+			    "enum": ["and", "or"]
+			},
+			"children": {
+			    "type": "array",
+			    "items": {
+				"oneOf": [
+				    {"$ref": "#context"},
+				    {"$ref": "#context_leaf"}
+				]
+			    }
+			}
+		    },
+		    "required": ["type", "children"],
+		    "additionalProperties": false
+		}
+	    ]
+	},
+	"view": {
+	    "id": "#view",
+	    "oneOf": [
+		{
+		    "description": "Primary key of Avocado DataView object",
+		    "type": "integer"
+		},
+		{
+		    "description": "Avocado DataView (list of output concepts/columns)",
+		    "type": "object",
+		    "properties": {
+			"columns": {
+			    "type": "array",
+			    "description": "Primary keys of DataConcept objects to be output",
+			    "items": {
+				"type": "integer"
+			    }
+			},
+			"ordering": {
+			    "type": "array",
+			    "description": "Array containing a single DataConcept primary key to be used as an order key, and the sort direction (asc or desc)",
+			    "items": [
+				{"type": "integer"},
+				{"enum": ["asc", "desc"]}
+			    ],
+			    "oneOf": [
+				{"minItems": 2, "maxItems": 2},
+				{"minItems": 0, "maxItems": 0}
+			    ]
+			}
+		    },
+		    "additionalProperties": false,
+		    "required": ["columns"]
+		}
+	    ]
+	}
+    },
+    "query": {
+	"id": "query",
+	"oneOf": [
+	    {
+		"description": "Primary key of Avocado DataQuery object",
+		"type": "integer"
+	    },
+	    {
+		"description": "Avocado DataQuery (context + view)",
+		"type": "object",
+		"properties": {
+		    "context": {
+			"$ref": "#context"
+		    },
+		    "view": {
+			"$ref": "#view"
+		    }
+		},
+		"required": ["context", "view"]
+	    }
+	]
+    }
+}
