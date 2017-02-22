@@ -18,6 +18,58 @@ traits:
           Link:
             type: string
             pattern: '<[^>]+>; rel="[^"]+"(; description="[^"]+")?(; title="[^"]+")?(,<[^>]+>; rel="[^"]+"(; description="[^"]+")?)*'
+  previewOrExportGet:
+    usage: Apply to get method of preview or export endpoints
+    queryParameters:
+      page:
+        required: false
+        description: Which page of results to fetch (1 = first)
+        type: integer
+      limit:
+        required: false
+        description: Page size in rows. If 0, all rows are returned.
+        type: integer
+      stop_page:
+        required: false
+        description: 'TODO: Should not be allowed for the preview
+          endpoint. (Are there other parameters that should be
+          forbidden?)'
+        type: integer
+  previewOrExportPost:
+    usage: Apply to post method of preview or export endpoints
+    queryParameters:
+      page:
+        required: false
+        description: Which page of results to fetch (1 = first)
+        type: integer
+      limit:
+        required: false
+        description: Page size in rows. If 0, all rows are returned.
+        type: integer
+      stop_page:
+        required: false
+        description: 'TODO: Should not be allowed for the preview
+          endpoint. (Are there other parameters that should be
+          forbidden?)'
+        type: integer
+      context:
+        description: <
+          The context is either an object defining a DataContext
+          (query conditions) or an integer primary key for a saved
+          DataContext object.
+        type: Context
+      view:
+        description: <
+          The view is either an object defining a DataView (output
+          columns) or an integer primary key for a saved DataView
+          object.
+        type: View
+      query:
+        description: <
+          The query is either an object defining a DataQuery (query
+          conditions combined with output columns) or an integer
+          primary key for a saved DataQuery object.
+        type: Query
 types:
   ServiceInfo:
     type: object
@@ -114,22 +166,6 @@ types:
         type:
           - integer
           - nil
-  CategoryLinks:
-    description: Related links for a category
-    type: object
-    properties:
-      parent:
-        required: false
-        description: |
-          URL of the parent category, if any. Note that if there is no
-          parent category, then the `parent` attribute will not exist.
-
-          **TODO**: not sure how to represent this in Swagger.
-        type: string
-      self:
-        required: false
-        description: URL of *this* category.
-        type: string
   Concept:
     type: object
     properties:
@@ -226,11 +262,11 @@ types:
     properties:
       alt_name:
         required: false
-        description: Same as the name, but **TODO** - what is it supposed to be?
+        description: 'Same as the name, but TODO: what is it supposed to be?'
         type: string
       alt_plural_name:
         required: false
-        description: Plural name of the field if not canonical (??? **TODO**)
+        description: 'Plural name of the field if not canonical (??? TODO:)'
         type: string
       description:
         required: false
@@ -253,7 +289,7 @@ types:
         type: string
       data_modified:
         required: false
-        description: '**TODO** What is this? Obsolete?'
+        description: 'TODO: What is this? Obsolete?'
         type: nil
       description:
         required: false
@@ -277,7 +313,7 @@ types:
         type: string
       keywords:
         required: false
-        description: '**TODO** format? (may be null)'
+        description: 'TODO: format? (may be null)'
         type: string
       model_name:
         required: false
@@ -316,7 +352,7 @@ types:
         type: string
       published:
         required: false
-        description: Always true, because only published fields are exposed (**TODO**)
+        description: 'Always true, because only published fields are exposed (TODO:)'
         type: boolean
       searchable:
         required: false
@@ -387,7 +423,7 @@ types:
     properties:
       pk:
         required: true
-        description: |
+        description: <
           Primary key of the root model instance associated with the data
           in this results row. For instance, if the root model is Patient,
           `pk` is the primary key of the particular patient record
@@ -398,10 +434,9 @@ types:
         description: Array of values for a row of results.
         type: string | number | nil
   ColumnKey:
-    description: |
-      Column (concept) name object. **TODO** Can this be anything
-
-      other than a concept? A formatter can inject other columns?
+    description: 'Column (concept) name object. TODO: Can this be
+      anything other than a concept? A formatter can inject other
+      columns?'
     type: object
     properties:
       id:
@@ -413,7 +448,7 @@ types:
         description: Name of column concept
         type: string
   Context:
-    description: |
+    description: <
       DataContext definition or primary key.
 
       If not an integer primary key, this is a tree object.
@@ -422,14 +457,14 @@ types:
       but `children` may contain other nodes ....
     type: !include avocado.objects.schema.json#context
   View:
-    description: |
+    description: <
       DataView definition or primary key.
 
       If not an integer primary key, this is an object containing
       columns and ordering.
     type: !include avocado.objects.schema.json#view
   Query:
-    description: |
+    description: <
       DataQuery definition or primary key.
 
       If not an integer primary key, this is an object containing
@@ -437,7 +472,7 @@ types:
     type: !include avocado.objects.schema.json#query
 /:
   get:
-    description: |
+    description: <
       The root endpoint returns the name and version of the API.
     responses:
       200:
@@ -450,17 +485,17 @@ types:
           Link:
             type: string
             pattern: '<.*>; rel="[^"]+"(,<.*>; rel="[^"]+")*'
-            description: |
+            description: <
               All un-templated endpoints
             example: <http://127.0.0.1:8000/api/data/export/>; rel="exporter"
           Link-Template:
             type: string
             pattern: '<.*>; rel="[^"]+"(,<.*>; rel="[^"]+")*'
-            description: |
+            description: <
               All templated endpoints
             example: <http://127.0.0.1:8000/api/data/export/{type}/>; rel="exporter"
   post:
-    description: |
+    description: <
         Posting to the root endpoint produces an authentication token
         in the response. By default, Serrano does not require authentication
         (SERRANO_AUTH_REQUIRED is False), and in many current installations,
@@ -479,13 +514,13 @@ types:
           Link:
             type: string
             pattern: '<.*>; rel="[^"]+"(,<.*>; rel="[^"]+")*'
-            description: |
+            description: <
               All un-templated endpoints
             example: <http://127.0.0.1:8000/api/data/export/>; rel="exporter"
           Link-Template:
             type: string
             pattern: '<.*>; rel="[^"]+"(,<.*>; rel="[^"]+")*'
-            description: |
+            description: <
               All templated endpoints
             example: <http://127.0.0.1:8000/api/data/export/{type}/>; rel="exporter"
       404:
@@ -542,7 +577,7 @@ types:
           description: Specified concept does not exist
   /:
     get:
-      description: |
+      description: <
         Get a list of all published, non-archived concepts.
       responses:
         200:
@@ -584,16 +619,14 @@ types:
                 type: Field
 /data/preview/:
   get:
-    description: |
-      Fetch the results of the current query.
+    description: "Fetch the results of the current query.
 
-      **TODO**: PreviewResource.get implies that it can obtain the
+      TODO: PreviewResource.get implies that it can obtain the
       view and context from query parameters, but I don't know how to
       get this to work; I think the code would have to know to
       `json.loads` the values.  Likewise, the `get` handler is happy
       to try to process the `query` parameter as a fallback, but I'm
-      not sure this works.
-
+      not sure this works."
     queryParameters:
       page:
         required: false
@@ -605,10 +638,10 @@ types:
         type: integer
       stop_page:
         required: false
-        description: >
-          **TODO** Should not be allowed for the preview endpoint. (Are
-          there other parameters that should be forbidden?)
-          type: integer
+        description: 'TODO: Should not be allowed for the preview
+          endpoint. (Are there other parameters that should be
+          forbidden?)'
+        type: integer
     responses:
       200:
         description: List of query results.
@@ -633,40 +666,39 @@ types:
         type: integer
       stop_page:
         required: false
-        description: >
-          **TODO** Should not be allowed for the preview endpoint. (Are
-          there other parameters that should be forbidden?)
-          type: integer
+        description: 'TODO: Should not be allowed for the preview
+          endpoint. (Are there other parameters that should be
+          forbidden?)'
+        type: integer
       context:
-        description: |
+        description: <
           The context is either an object defining a DataContext
           (query conditions) or an integer primary key for a saved
           DataContext object.
         type: Context
       view:
-        description: |
+        description: <
           The view is either an object defining a DataView (output
           columns) or an integer primary key for a saved DataView
           object.
         type: View
       query:
-        description: |
+        description: <
           The query is either an object defining a DataQuery (query
           conditions combined with output columns) or an integer
           primary key for a saved DataQuery object.
         type: Query
 /data/export:
-  description: |
-    The export endpoints output the query results in various formats for download.
-    It is possible for an application using Avocado to define custom
-    exporters, in which case additional export endpoints may be available.
+  description: 'The export endpoints output the query results in
+    various formats for download.  It is possible for an application
+    using Avocado to define custom exporters, in which case additional
+    export endpoints may be available.
 
     TODO: from looking at the code, it appears that the code will
     respond to the following query parameters (although presumably not
     all of them are intended to be overrideable by parameters): page,
     limit, stop_page, query_name, processor, tree, export_type,
-    reader.
-
+    reader.'
   /:
     get:
       is: [ linkHeader ]
@@ -679,9 +711,9 @@ types:
               type: ExportServiceInfo
           headers:
             Link:
-              description: |
+              description: <
                 All /data/export/* endpoints, including /excel, /json, /r, /sas, /csv, etc.
-                example: <http://127.0.0.1:8000/api/data/export/excel/>; rel="excel"; description="Microsoft Excel 2007 Format"; title="Excel"
+              example: <http://127.0.0.1:8000/api/data/export/excel/>; rel="excel"; description="Microsoft Excel 2007 Format"; title="Excel"
   /excel/:
     get:
       description: Export query results in Excel format
@@ -720,10 +752,10 @@ types:
               type: file
   /sas/:
     get:
-      description: Export query results in CSV format
+      description: Export query results in SAS format
       responses:
         200:
-          description: CSV file
+          description: Zip file containing data.csv and script.sas for loading the data
           body:
-            text/csv:
+            application/zip:
               type: file
